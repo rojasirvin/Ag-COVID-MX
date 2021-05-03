@@ -1,0 +1,69 @@
+---
+title: "Preliminary"
+author: "Irvin Rojas and Jisang Yu"
+date: "5/03/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE)
+```
+
+## Data summary
+* (I don't really know how to make a summary table... so here is the ugly one)
+```{r prep, results="hide"}
+#libraries
+library(tidyverse)
+library(foreign)
+library(lmtest)
+
+#read data
+data<-read.dta("cleaned_v1.dta") 
+```
+
+```{r prep2, collectcode=TRUE}
+data %>%
+  summarise(
+          count = n(),
+          mean_d_wage = mean(d_mhrwageactive, na.rm = TRUE),
+          sd_d_wage = sd(d_mhrwageactive, na.rm = TRUE),
+          mean_w_covid_apr = mean(w_covid_apr, na.rm = TRUE),
+          sd_w_covid_apr = sd(w_covid_apr, na.rm = TRUE))
+```
+
+## Preliminary regressions
+
+* First, let's assess whether the Covid exposure of the Mexican migrants in US has any impacts on the local wages ($W$) in the Mexican cities
+$$
+\Delta W_{c}=\alpha+\beta \sum_{s} \theta_{sc}Covid_s+\varepsilon_c
+$$
+where
+$$
+\Delta W_{c}=W_{c,2020q4}-W_{c,2019q4}
+$$
+$$
+\theta_{sc}=\frac{\text{Number of travelers from city $c$ to state $s$}}{\text{Total number of travels from city $c$}}
+$$
+and $Covid_s$ is the number of cases in state $s$ (per million people).
+```{r prelim, collectcode=TRUE}
+#regression
+reg1<-lm(d_mhrwageactive~w_covid_apr, data=data)
+coeftest(reg1)
+```
+
+* Second, let's assess whether there are differential effects between agricultural and non-agricultural sectors:
+$$
+\Delta W_{c}=\alpha+\beta_1 \sum_{s} \theta_{sc}Covid_s +\beta_2 \sum_{s} \theta_{sc} Ag_s Covid_s +\varepsilon_c
+$$
+where $Ag_s$ is the share of Mexican-born agricultural workers over total agricultural workers in state $s$.
+```{r prelim2, collectcode=TRUE}
+#regression2
+reg2<-lm(d_mhrwageactive~w_covid_apr+w_covid_apr_ag, data=data)
+coeftest(reg2)
+```
+
+## Considerations
+* Small sample: Number of cities=37
+* Other sectors?
+* Mexico local Covid exposure?
+* Control for the importance of the migration in city $c$?
