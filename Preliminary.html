@@ -369,13 +369,16 @@ library(lmtest)
 #read data
 data&lt;-read.dta(&quot;cleaned_v1.dta&quot;) 
 data_ind&lt;-read.dta(&quot;cleaned_ind_v1.dta&quot;) 
+data_ind_ag&lt;-read.dta(&quot;cleaned_ind_ag_v1.dta&quot;) 
 
 #mutate individual data
 data_ind %&gt;%
   mutate(
-    cd_a=as_factor(cd_a),
-    sector=as_factor(sector),
-    occ=as_factor(occ),
+    mx_mun=as_factor(mx_mun),
+  )
+data_ind_ag %&gt;%
+  mutate(
+    mx_mun=as_factor(mx_mun),
   )</code></pre>
 <pre class="r"><code>data %&gt;%
   summarise(
@@ -390,14 +393,16 @@ data_ind %&gt;%
   summarise(
           count = n(),
           mean_d_wage = mean(d_hrwage, na.rm = TRUE),
-          sd_d_wage = sd(d_hrwage, na.rm = TRUE))</code></pre>
-<pre><code>##   count mean_d_wage sd_d_wage
-## 1 49139   -3.276601  65.91979</code></pre>
+          sd_d_wage = sd(d_hrwage, na.rm = TRUE),
+          mean_w_covid_apr = mean(w_covid_apr, na.rm = TRUE),
+          sd_w_covid_apr = sd(w_covid_apr, na.rm = TRUE))</code></pre>
+<pre><code>##   count mean_d_wage sd_d_wage mean_w_covid_apr sd_w_covid_apr
+## 1 49139   -3.276601  65.91979         2490.867       1836.172</code></pre>
 </div>
 <div id="preliminary-regressions-city-level" class="section level2">
 <h2>Preliminary regressions: City-level</h2>
 <ul>
-<li>First, let’s assess whether the Covid exposure of the Mexican migrants in US has any impacts on the local wages (<span class="math inline">\(W\)</span>) in the Mexican cities <span class="math display">\[
+<li>First, let’s assess whether the Covid exposure of the Mexican migrants in US has any impacts on the local wages (<span class="math inline">\(W\)</span>) in the Mexican cities: <span class="math display">\[
 \Delta W_{c}=\alpha+\beta \sum_{s} \theta_{sc}Covid_s+\varepsilon_c
 \]</span> where <span class="math display">\[
 \Delta W_{c}=W_{c,2020q4}-W_{c,2019q4}
@@ -437,12 +442,12 @@ coeftest(reg2)</code></pre>
 <div id="preliminary-regressions-individual-level" class="section level2">
 <h2>Preliminary regressions: Individual-level</h2>
 <ul>
-<li>Similarly, let’s assess whether the Covid exposure of the Mexican migrants in US has any impacts on the wages (<span class="math inline">\(W\)</span>) earned by the Mexican individuals <span class="math display">\[
-\Delta W_{ci}=\alpha+\beta \sum_{s} \theta_{sc}Covid_s+\varepsilon_{ci}
+<li>Similarly, let’s assess whether the Covid exposure of the Mexican migrants in US has any impacts on the wages (<span class="math inline">\(W\)</span>) earned by the Mexican individuals: <span class="math display">\[
+\Delta W_{mi}=\alpha+\beta \sum_{s} \theta_{sm}Covid_s+\varepsilon_{mi}
 \]</span> where <span class="math display">\[
-\Delta W_{ci}=W_{ci,2020q4}-W_{ci,2019q4}
+\Delta W_{mi}=W_{mi,2020q4}-W_{mi,2019q4}
 \]</span> <span class="math display">\[
-\theta_{sc}=\frac{\text{Number of travelers from city $c$ to state $s$}}{\text{Total number of travels from city $c$}}
+\theta_{sm}=\frac{\text{Number of travelers from Mexican municipality $m$ to state $s$}}{\text{Total number of travels from Mexican municipality $m$}}
 \]</span> and <span class="math inline">\(Covid_s\)</span> is the number of cases in state <span class="math inline">\(s\)</span> (per million people).</li>
 </ul>
 <pre class="r"><code>#regression
@@ -452,13 +457,13 @@ coeftest(regind1)</code></pre>
 ## t test of coefficients:
 ## 
 ##                Estimate  Std. Error t value  Pr(&gt;|t|)    
-## (Intercept) -4.00584947  0.84870160 -4.7200 2.368e-06 ***
-## w_covid_apr  0.00069108  0.00030155  2.2918   0.02192 *  
+## (Intercept) -2.83715408  0.44935927 -6.3138 2.747e-10 ***
+## w_covid_apr  0.00018132  0.00014127  1.2835    0.1993    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <ul>
 <li>Second, let’s assess whether there are differential effects between agricultural and non-agricultural sectors: <span class="math display">\[
-\Delta W_{ci}=\alpha+\beta_1 \sum_{s} \theta_{sc}Covid_s +\beta_2 \sum_{s} \theta_{sc} Ag_s Covid_s +\varepsilon_c
+\Delta W_{mi}=\alpha+\beta_1 \sum_{s} \theta_{sm}Covid_s +\beta_2 \sum_{s} \theta_{sm} Ag_s Covid_s +\varepsilon_{mi}
 \]</span> where <span class="math inline">\(Ag_s\)</span> is the share of Mexican-born agricultural workers over total agricultural workers in state <span class="math inline">\(s\)</span>.</li>
 </ul>
 <pre class="r"><code>#regression2
@@ -468,64 +473,36 @@ coeftest(regind2)</code></pre>
 ## t test of coefficients:
 ## 
 ##                   Estimate  Std. Error t value  Pr(&gt;|t|)    
-## (Intercept)    -4.67113622  1.14078223 -4.0947 4.237e-05 ***
-## w_covid_apr     0.00056851  0.00033265  1.7090   0.08745 .  
-## w_covid_apr_ag  0.00895338  0.01025884  0.8727   0.38281    
+## (Intercept)    -2.40796670  0.61825553 -3.8948 9.842e-05 ***
+## w_covid_apr     0.00024959  0.00015659  1.5939    0.1110    
+## w_covid_apr_ag -0.00534816  0.00529145 -1.0107    0.3122    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <ul>
-<li>Funny results from the full sample. Let’s look blue collar and agriculture separately:
+<li>Funny results from the full sample. Let’s look agriculture separately:
 <ul>
 <li>Agriculture</li>
 </ul></li>
 </ul>
 <pre class="r"><code>#regression
-regind1&lt;-lm(d_hrwage~w_covid_apr, data=data_ind, weights=weight, subset=(occ==&quot;agriculture&quot;))
+regind1&lt;-lm(d_hrwage~w_covid_apr, data=data_ind_ag, weights=weight)
 coeftest(regind1)</code></pre>
 <pre><code>## 
 ## t test of coefficients:
 ## 
-##               Estimate Std. Error t value Pr(&gt;|t|)
-## (Intercept)  7.7705323  9.0961794  0.8543   0.3938
-## w_covid_apr -0.0031676  0.0024107 -1.3140   0.1902</code></pre>
+##                Estimate  Std. Error t value Pr(&gt;|t|)
+## (Intercept) -1.6940e+00  1.6230e+00 -1.0437   0.2969
+## w_covid_apr -2.2726e-05  4.1505e-04 -0.0548   0.9563</code></pre>
 <pre class="r"><code>#regression2
-regind2&lt;-lm(d_hrwage~w_covid_apr+w_covid_apr_ag, data=data_ind, weights=weight, subset=(occ==&quot;agriculture&quot;))
+regind2&lt;-lm(d_hrwage~w_covid_apr+w_covid_apr_ag, data=data_ind_ag, weights=weight)
 coeftest(regind2)</code></pre>
 <pre><code>## 
 ## t test of coefficients:
 ## 
-##                   Estimate  Std. Error t value  Pr(&gt;|t|)    
-## (Intercept)    -77.7453492  12.2384622 -6.3525 1.122e-09 ***
-## w_covid_apr     -0.0135999   0.0023695 -5.7395 2.980e-08 ***
-## w_covid_apr_ag   1.0015696   0.1102566  9.0840 &lt; 2.2e-16 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<ul>
-<li>Blue collar</li>
-</ul>
-<pre class="r"><code>#regression
-regind1&lt;-lm(d_hrwage~w_covid_apr, data=data_ind, weights=weight, subset=(occ==&quot;blue collar&quot;))
-coeftest(regind1)</code></pre>
-<pre><code>## 
-## t test of coefficients:
-## 
-##                Estimate  Std. Error t value Pr(&gt;|t|)  
-## (Intercept) -3.07068109  1.25386412 -2.4490  0.01435 *
-## w_covid_apr -0.00010998  0.00043163 -0.2548  0.79888  
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<pre class="r"><code>#regression2
-regind2&lt;-lm(d_hrwage~w_covid_apr+w_covid_apr_ag, data=data_ind, weights=weight, subset=(occ==&quot;blue collar&quot;))
-coeftest(regind2)</code></pre>
-<pre><code>## 
-## t test of coefficients:
-## 
-##                   Estimate  Std. Error t value Pr(&gt;|t|)  
-## (Intercept)    -3.44374102  1.76033547 -1.9563  0.05047 .
-## w_covid_apr    -0.00016641  0.00047037 -0.3538  0.72351  
-## w_covid_apr_ag  0.00485209  0.01606898  0.3020  0.76270  
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+##                   Estimate  Std. Error t value Pr(&gt;|t|)
+## (Intercept)    -1.0420e+00  2.3508e+00 -0.4432   0.6577
+## w_covid_apr     3.7408e-05  4.4384e-04  0.0843   0.9328
+## w_covid_apr_ag -6.5223e-03  1.7007e-02 -0.3835   0.7014</code></pre>
 </div>
 <div id="considerations" class="section level2">
 <h2>Considerations</h2>

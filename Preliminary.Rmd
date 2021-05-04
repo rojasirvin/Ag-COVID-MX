@@ -2,7 +2,7 @@
 title: "Preliminary"
 author: "Irvin Rojas and Jisang Yu"
 date: "5/03/2021"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -21,13 +21,16 @@ library(lmtest)
 #read data
 data<-read.dta("cleaned_v1.dta") 
 data_ind<-read.dta("cleaned_ind_v1.dta") 
+data_ind_ag<-read.dta("cleaned_ind_ag_v1.dta") 
 
 #mutate individual data
 data_ind %>%
   mutate(
-    cd_a=as_factor(cd_a),
-    sector=as_factor(sector),
-    occ=as_factor(occ),
+    mx_mun=as_factor(mx_mun),
+  )
+data_ind_ag %>%
+  mutate(
+    mx_mun=as_factor(mx_mun),
   )
 ```
 
@@ -43,12 +46,14 @@ data_ind %>%
   summarise(
           count = n(),
           mean_d_wage = mean(d_hrwage, na.rm = TRUE),
-          sd_d_wage = sd(d_hrwage, na.rm = TRUE))
+          sd_d_wage = sd(d_hrwage, na.rm = TRUE),
+          mean_w_covid_apr = mean(w_covid_apr, na.rm = TRUE),
+          sd_w_covid_apr = sd(w_covid_apr, na.rm = TRUE))
 ```
 
 ## Preliminary regressions: City-level
 
-* First, let's assess whether the Covid exposure of the Mexican migrants in US has any impacts on the local wages ($W$) in the Mexican cities
+* First, let's assess whether the Covid exposure of the Mexican migrants in US has any impacts on the local wages ($W$) in the Mexican cities:
 $$
 \Delta W_{c}=\alpha+\beta \sum_{s} \theta_{sc}Covid_s+\varepsilon_c
 $$
@@ -79,16 +84,16 @@ coeftest(reg2)
 
 ## Preliminary regressions: Individual-level
 
-* Similarly, let's assess whether the Covid exposure of the Mexican migrants in US has any impacts on the wages ($W$) earned by the Mexican individuals
+* Similarly, let's assess whether the Covid exposure of the Mexican migrants in US has any impacts on the wages ($W$) earned by the Mexican individuals:
 $$
-\Delta W_{ci}=\alpha+\beta \sum_{s} \theta_{sc}Covid_s+\varepsilon_{ci}
+\Delta W_{mi}=\alpha+\beta \sum_{s} \theta_{sm}Covid_s+\varepsilon_{mi}
 $$
 where
 $$
-\Delta W_{ci}=W_{ci,2020q4}-W_{ci,2019q4}
+\Delta W_{mi}=W_{mi,2020q4}-W_{mi,2019q4}
 $$
 $$
-\theta_{sc}=\frac{\text{Number of travelers from city $c$ to state $s$}}{\text{Total number of travels from city $c$}}
+\theta_{sm}=\frac{\text{Number of travelers from Mexican municipality $m$ to state $s$}}{\text{Total number of travels from Mexican municipality $m$}}
 $$
 and $Covid_s$ is the number of cases in state $s$ (per million people).
 ```{r prelim_ind, collectcode=TRUE}
@@ -99,7 +104,7 @@ coeftest(regind1)
 
 * Second, let's assess whether there are differential effects between agricultural and non-agricultural sectors:
 $$
-\Delta W_{ci}=\alpha+\beta_1 \sum_{s} \theta_{sc}Covid_s +\beta_2 \sum_{s} \theta_{sc} Ag_s Covid_s +\varepsilon_c
+\Delta W_{mi}=\alpha+\beta_1 \sum_{s} \theta_{sm}Covid_s +\beta_2 \sum_{s} \theta_{sm} Ag_s Covid_s +\varepsilon_{mi}
 $$
 where $Ag_s$ is the share of Mexican-born agricultural workers over total agricultural workers in state $s$.
 ```{r prelim_ind2, collectcode=TRUE}
@@ -108,23 +113,14 @@ regind2<-lm(d_hrwage~w_covid_apr+w_covid_apr_ag, data=data_ind, weights=weight)
 coeftest(regind2)
 ```
 
-* Funny results from the full sample. Let's look blue collar and agriculture separately:
+* Funny results from the full sample. Let's look agriculture separately:
   + Agriculture
 ```{r prelim_ind3, collectcode=TRUE}
 #regression
-regind1<-lm(d_hrwage~w_covid_apr, data=data_ind, weights=weight, subset=(occ=="agriculture"))
+regind1<-lm(d_hrwage~w_covid_apr, data=data_ind_ag, weights=weight)
 coeftest(regind1)
 #regression2
-regind2<-lm(d_hrwage~w_covid_apr+w_covid_apr_ag, data=data_ind, weights=weight, subset=(occ=="agriculture"))
-coeftest(regind2)
-```
-  + Blue collar
-```{r prelim_ind4, collectcode=TRUE}
-#regression
-regind1<-lm(d_hrwage~w_covid_apr, data=data_ind, weights=weight, subset=(occ=="blue collar"))
-coeftest(regind1)
-#regression2
-regind2<-lm(d_hrwage~w_covid_apr+w_covid_apr_ag, data=data_ind, weights=weight, subset=(occ=="blue collar"))
+regind2<-lm(d_hrwage~w_covid_apr+w_covid_apr_ag, data=data_ind_ag, weights=weight)
 coeftest(regind2)
 ```
 
