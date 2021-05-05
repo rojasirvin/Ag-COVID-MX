@@ -98,7 +98,7 @@ $$
 and $Covid_s$ is the number of cases in state $s$ (per million people).
 ```{r prelim_ind, collectcode=TRUE}
 #regression
-regind1<-lm(d_hrwage~w_covid_apr+age+schooling+female+as.factor(occ), data=data_ind, weights=weight)
+regind1<-lm(d_hrwage~w_covid_apr, data=data_ind, weights=weight)
 coeftest(regind1)
 ```
 
@@ -109,7 +109,7 @@ $$
 where $Ag_s$ is the share of Mexican-born agricultural workers over total agricultural workers in state $s$.
 ```{r prelim_ind2, collectcode=TRUE}
 #regression2
-regind2<-lm(d_hrwage~w_covid_apr+w_covid_apr_ag+age+schooling+female+as.factor(occ), data=data_ind, weights=weight)
+regind2<-lm(d_hrwage~w_covid_apr+w_covid_apr_ag, data=data_ind, weights=weight)
 coeftest(regind2)
 ```
 
@@ -117,10 +117,10 @@ coeftest(regind2)
   + Agriculture
 ```{r prelim_ind3, collectcode=TRUE}
 #regression
-regind1<-lm(d_hrwage~w_covid_apr+age+schooling+female, data=data_ind_ag, weights=weight)
+regind1<-lm(d_hrwage~w_covid_apr, data=data_ind_ag, weights=weight)
 coeftest(regind1)
 #regression2
-regind2<-lm(d_hrwage~w_covid_apr+w_covid_apr_ag+age+schooling+female, data=data_ind_ag, weights=weight)
+regind2<-lm(d_hrwage~w_covid_apr+w_covid_apr_ag, data=data_ind_ag, weights=weight)
 coeftest(regind2)
 ```
 
@@ -128,5 +128,8 @@ coeftest(regind2)
 ## Considerations
 * Small sample: Number of cities=37
 * Other sectors?
-* Mexico local Covid exposure?
-* Control for the importance of the migration in city $c$?
+* US Covid exposure by interview date and by municipality
+* Mexico local Covid exposure?: cd_a_charateristics.csv for municipality
+* HH level: migrants and remittance...
+* Control for the importance of the migration in city $c$/municipality $m$?
+* Panel approach (FE): Requires COVID numbers to change over time...
